@@ -80,7 +80,7 @@
             if (!confirm('Are you sure you want to delete this video?')) return;
 
             try {
-                const response = await fetch(\`/api/videos/\${filename}\`, {
+                const response = await fetch(`/api/videos/${filename}`, {
                     method: 'DELETE'
                 });
                 const result = await response.json();
