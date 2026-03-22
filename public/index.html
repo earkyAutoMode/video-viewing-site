@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Site - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .container { margin-top: 50px; }
+        .video-item { margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; background-color: #fff; cursor: pointer; transition: background-color 0.3s; }
+        .video-item:hover { background-color: #f0f0f0; }
+        .video-title { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Video Viewing Site</h1>
+        
+        <!-- Upload Form -->
+        <div class="card mb-4">
+            <div class="card-header">Upload Video</div>
+            <div class="card-body">
+                <form id="uploadForm">
+                    <div class="mb-3">
+                        <input type="file" id="videoInput" name="video" class="form-control" accept=".mp4,.webm" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <div id="uploadStatus" class="mt-2"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Video List -->
+        <div class="card">
+            <div class="card-header">Video List</div>
+            <div class="card-body">
+                <div id="videoList" class="row">
+                    <!-- Dynamic content here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display video list
+        async function fetchVideos() {
+            const response = await fetch('/api/videos');
+            const videos = await response.json();
+            const listDiv = document.getElementById('videoList');
+            listDiv.innerHTML = '';
+            
+            if (videos.length === 0) {
+                listDiv.innerHTML = '<p class="text-center">No videos uploaded yet.</p>';
+                return;
+            }
+
+            videos.forEach(video => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.innerHTML = `
+                    <div class="video-item card shadow-sm" onclick="window.location.href='player.html?video=${encodeURIComponent(video.name)}'">
+                        <div class="card-body text-center">
+                            <i class="bi bi-play-circle-fill" style="font-size: 3rem; color: #0d6efd;"></i>
+                            <div class="video-title text-truncate mt-2">${video.name}</div>
+                        </div>
+                    </div>
+                `;
+                listDiv.appendChild(col);
+            });
+        }
+
+        // Handle form submission
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const statusDiv = document.getElementById('uploadStatus');
+            const fileInput = document.getElementById('videoInput');
+            const formData = new FormData();
+            formData.append('video', fileInput.files[0]);
+
+            statusDiv.innerHTML = '<span class="text-info">Uploading...</span>';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                statusDiv.innerHTML = '<span class="text-success">' + result.message + '</span>';
+                fileInput.value = '';
+                fetchVideos(); // Refresh list
+            } catch (err) {
+                statusDiv.innerHTML = '<span class="text-danger">Upload failed.</span>';
+                console.error(err);
+            }
+        };
+
+        // Initial fetch
+        fetchVideos();
+    </script>
+</body>
+</html>
