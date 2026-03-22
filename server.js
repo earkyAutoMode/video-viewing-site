@@ -52,6 +52,25 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
     res.json({ message: 'File uploaded successfully', filename: req.file.filename });
 });
 
+// API: Delete video
+app.delete('/api/videos/:filename', (req, res) => {
+    const filename = req.params.filename;
+    // Basic security: ensure filename doesn't contain path traversal characters
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+    }
+    const filePath = path.join(uploadDir, filename);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to delete file' });
+        }
+        res.json({ message: 'File deleted successfully' });
+    });
+});
+
 app.listen(port, '0.0.0.0', () => {
     console.log(`Video Site listening at http://43.138.163.183:${port}`);
 });
